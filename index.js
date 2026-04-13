@@ -1,50 +1,48 @@
 const express = require("express");
-const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const passport = require("passport");
 
-const connect_db = require("./config/db-connect.js");
+const connect_db = require("./config/db-connect");
 const passportConfig = require("./auth/passport");
 
+const routes = require("./routes");
+
 const app = express();
-const routes = require("./routes/index.js");
+
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",              
-      process.env.FRONTEND_URL             
+      "http://localhost:5173",
+      process.env.FRONTEND_URL,
     ],
     credentials: true,
   })
 );
-app.use(cookieParser());
-app.use(express.json());  
-app.use("/api", routes);  
-app.use(express.urlencoded({ extended: true }));
 
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 passportConfig(passport);
+
+
+app.use("/api", routes);
+
+
 app.get("/", (req, res) => {
-  res.send("Server is running 🚀");
+  res.status(200).send("Server is running 🚀");
 });
+
 
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  try {
-    await connect_db();
-    console.log("MongoDB connected");
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
 
-    app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-    });
-
-  } catch (err) {
-    console.error(" Failed to start server:", err);
-    process.exit(1);
-  }
-};
-
-startServer();
+connect_db()
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("DB connection failed:", err));

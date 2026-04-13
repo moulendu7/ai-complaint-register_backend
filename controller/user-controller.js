@@ -1,5 +1,4 @@
 const userService = require("../services/user-service");
-
 exports.registerUser = async (req, res) => {
   try {
     const user = await userService.registerUser({
@@ -26,6 +25,12 @@ exports.registerAdmin = async (req, res) => {
   }
 };
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // 🔥 true on Render
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 🔥 cross-origin fix
+};
+
 exports.loginUser = async (req, res) => {
   try {
     const result = await userService.loginUser(req.body);
@@ -37,15 +42,11 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    res.cookie("token", result.token, {
-      httpOnly: true,
-      secure: false, 
-      sameSite: "lax",
-    });
+    res.cookie("token", result.token, cookieOptions);
 
     res.json({
       success: true,
-      user: result.user, 
+      user: result.user,
     });
 
   } catch (err) {
@@ -64,11 +65,7 @@ exports.loginAdmin = async (req, res) => {
       });
     }
 
-    res.cookie("token", result.token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-    });
+    res.cookie("token", result.token, cookieOptions);
 
     res.json({
       success: true,
@@ -79,10 +76,13 @@ exports.loginAdmin = async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 };
-
 exports.logout = (req, res) => {
-  res.clearCookie("token");
-  res.json({ success: true, message: "Logged out" });
+  res.clearCookie("token", cookieOptions);
+
+  res.json({
+    success: true,
+    message: "Logged out",
+  });
 };
 
 exports.getMe = (req, res) => {
