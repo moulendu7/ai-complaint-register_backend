@@ -10,11 +10,13 @@ const passportConfig = require("./auth/passport");
 
 const app = express();
 const routes = require("./routes/index.js");
-
 app.use(
   cors({
-    origin: "http://localhost:5173", 
-    credentials: true,             
+    origin: [
+      "http://localhost:5173",              
+      process.env.FRONTEND_URL             
+    ],
+    credentials: true,
   })
 );
 app.use(cookieParser());
